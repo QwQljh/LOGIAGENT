@@ -16,3 +16,4 @@ COPY apis/*/specifications/* /specifications/
 WORKDIR /tool/src
 RUN mkdir -p apis/openai_embedding && chmod +x /tool/run.sh
 ENTRYPOINT ["/tool/run.sh"]
+LABEL org.logiagent.component="tool" org.logiagent.backend="ollama" org.logiagent.version="1.0.2"

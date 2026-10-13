@@ -1,0 +1,26 @@
+# RESTgym tool manifest: model and tool deployment resources are included below.
+manifest_version: 1
+id: logiagent
+name: LOGIAGENT
+version: "1.0.2"
+description: LLM-guided REST API request sequence generation, response-derived resource reuse, and sequence and parameter mutation.
+# license: not specified for the tool; the model license is provided separately.
+repository: https://github.com/QwQljh/LOGIAGENT
+homepage: https://github.com/QwQljh/LOGIAGENT
+# authors: author metadata is supplied in the competition submission.
+# citation: no DOI has been assigned.
+compatibility:
+  openapi_versions: ["2.0", "3.0"]
+  spec_formats: [json, yaml]
+  budgets: [time, requests]
+requirements:
+  min_cpus: 8
+  min_memory_gb: 32
+  gpu:
+    count: 1
+    min_vram_gb: 24
+  # Internet is required for initial image builds; not for model inference.
+  internet: true
+llm:
+  models: [qwen3:14b]
+  hosting: local

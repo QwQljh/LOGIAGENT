@@ -93,8 +93,11 @@ llm_config = {"config_list": [
 if global_vars_funcs_configs.CONFIG_LLM_BASE_URL:
     llm_config["config_list"][0]["base_url"] = global_vars_funcs_configs.CONFIG_LLM_BASE_URL
 if 'qwen3' in global_vars_funcs_configs.CONFIG_LLM_MODEL.lower():
-    llm_config['config_list'][0]['extra_body'] = {
-        'chat_template_kwargs': {'enable_thinking': False}}
+    llm_config['config_list'][0]['extra_body'] = (
+        {'reasoning_effort': 'none'}
+        if os.getenv('LLM_BACKEND', 'vllm').lower() == 'ollama'
+        else {'chat_template_kwargs': {'enable_thinking': False}}
+    )
 
 test_scenario_response_message = ""
 

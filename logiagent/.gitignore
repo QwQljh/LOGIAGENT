@@ -1,4 +1,14 @@
 *.pyc
+__pycache__/
+**/__pycache__/
+llm/weights/
+/images/
+*.tar
+*.tar.gz
+*.zip
+*.part
+*.gguf
+*.safetensors
 .cache/*
 **/.cache/*
 .idea/*

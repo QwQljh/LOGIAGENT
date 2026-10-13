@@ -1,35 +1,42 @@
 # LOGIAGENT
 
-LOGIAGENT 使用本地 LLM 生成 REST API 请求序列，复用响应中的资源，并进行序列与参数变异。支持 OpenAPI JSON 和 YAML。
+LOGIAGENT 使用 LLM 生成 REST 请求序列，复用响应资源，并进行序列和参数变异，支持 OpenAPI JSON 和 YAML。
 
-## 快速使用
+## 一次准备
 
-1. 将本目录放入已有 RESTGym 的 `tools/logiagent`。
-2. 启动本地 OpenAI 兼容模型服务，在 `model-config.json` 中修改 `LLM_BASE_URL` 和实际模型名称 `LLM_MODEL`。服务启用认证时，填写可选的 `LLM_API_KEY`；否则保留 `EMPTY`。显式传入容器的环境变量优先于文件。工具不会启动模型服务或下载权重，地址必须能从工具容器访问。
-3. 将 `restgym-tool-config.yml` 改为 `enabled: true`。只测试 LOGIAGENT 时，关闭其他工具。
-4. 在 RESTGym 根目录运行 `./restgym.sh b`，选择构建工具镜像。镜像名为 `restgym-logiagent`；已有镜像可能被跳过，修改源码或配置后应重新构建。
-5. 在 RESTGym 中选择 API、设置测试时间，再运行 `./restgym.sh l`。
-
-启动测试前，检查模型能否正常生成回复。地址、模型名和密钥需与 `model-config.json` 一致；使用真实密钥时替换 `Bearer EMPTY`。成功响应的 `choices[0].message.content` 应包含非空回复：
+将完整目录放到 RESTGym 的 `tools/logiagent`，在平台根目录执行：
 
 ```bash
-curl -fsS --max-time 60 http://127.0.0.1:11434/v1/chat/completions -H 'Content-Type: application/json' -H 'Authorization: Bearer EMPTY' -d '{"model":"qwen3-14b","messages":[{"role":"user","content":"Reply with OK."}],"max_tokens":64,"chat_template_kwargs":{"enable_thinking":false}}'
+bash tools/logiagent/prepare.sh
 ```
 
-需要明确重新构建时，在 RESTGym 根目录执行：
+脚本检查 GPU，下载固定版本的 Ollama 基础镜像和 Qwen3-14B Q4_K_M 权重，构建本地模型镜像，启动模型，从 host 网络容器检查实际生成，并启用 LOGIAGENT。不需要登录我们的镜像仓库，不需要修改模型地址、名称或密钥。服务地址为 `http://127.0.0.1:11434/v1`，名称为 `qwen3-14b`，无密钥认证，`EMPTY` 是客户端占位值。
+
+正式部署要求一张至少 24GB 显存的 NVIDIA GPU、兼容驱动和 Docker GPU 支持，8 CPU、32GB 系统内存；被测 API 容器可能另需资源。首次准备需要联网，下载量约 13GB，建议至少预留 60GB 磁盘用于镜像和构建缓存。权重进入构建后的模型镜像，推理时不再下载。
+
+## 正常执行 RESTGym
+
+准备成功后，在平台选择接口、工具和预算，自行依次执行：
 
 ```bash
-docker build -t restgym-logiagent -f tools/logiagent/Dockerfile .
+./restgym.sh b
+./restgym.sh l
+./restgym.sh v
+./restgym.sh a
 ```
 
-## 文件与输出
+准备脚本不执行这四步，也不修改 RESTGym。`b` 构建工具和 API 镜像，不构建或启动模型。工具镜像名为 `restgym-logiagent`，修改源代码或配置后要重建。模型跨多次实验保持运行，全部完成后再停止：
 
-`src/logiagent` 是运行源码，`run.sh` 自动启动 `python -m logiagent`。唯一依赖文件为 `requirements.txt`，包含经过测试的完整依赖及精确版本。`runtime-defaults.json` 保存内部默认值，正常使用只需修改模型配置并启用工具。
+```bash
+bash tools/logiagent/deployment/stop-model.sh
+```
 
-RESTGym 提供 `API`、`HOST`、`PORT`、`TOOL`、`RUN` 和以分钟计的 `TIME_BUDGET`，并收集 HTTP 交互与工具日志。默认不额外保存容器内部文件（`LOGIAGENT_SAVE_ARTIFACTS=false`）。
+## 文件和问题排查
 
-模型的实际上下文容量由服务端决定，内部 `LLM_CONTEXT_WINDOW` 只是提示词预算假设。OpenAPI 外部 `$ref` 文件需预先打包。
+序列测试算法、固定依赖和工具入口不变；模型调用适配了 Ollama 关闭 thinking 的参数，内部默认 LLM_BACKEND 为 ollama。`llm/` 保存模型 Dockerfile 和固定配置；`deployment/` 保存检查和清理辅助脚本；`restgym-tool-manifest.yaml` 描述正式资源要求，未知身份、工具许可证和引用字段已注释。
 
-[English](README.md)
+重复准备复用匹配镜像和容器，并再次检查生成。遇到同名冲突容器不会自动覆盖。失败时查看 `docker logs logiagent-llm`，检查 GPU、端口 11434、host 网络。验证失败不会显示准备成功。
 
-公开提交包保留 `EMPTY`。真实密钥写入配置后会进入构建的镜像；运行环境允许时，可显式传入容器环境变量，避免将密钥嵌入镜像。
+RESTGym 收集 HTTP 交互和日志，工具内部额外持久化默认关闭（`LOGIAGENT_SAVE_ARTIFACTS=false`）。工具提示词预算和模型服务上下文是不同设置。外部 OpenAPI 引用需先打包。
+
+[部署细节](deployment/README.md) | [English](README.md)

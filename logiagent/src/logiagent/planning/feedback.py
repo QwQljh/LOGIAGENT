@@ -243,7 +243,11 @@ def ask_llm(messages, max_tokens=1100, deadline=None):
                     max_retries=0)
     options = {}
     if 'qwen3' in config.CONFIG_LLM_MODEL.lower():
-        options['extra_body'] = {'chat_template_kwargs': {'enable_thinking': False}}
+        options['extra_body'] = (
+            {'reasoning_effort': 'none'}
+            if os.getenv('LLM_BACKEND', 'vllm').lower() == 'ollama'
+            else {'chat_template_kwargs': {'enable_thinking': False}}
+        )
     response = client.chat.completions.create(
         model=config.CONFIG_LLM_MODEL, messages=messages, temperature=0,
         max_tokens=max_tokens, **options)

@@ -1,0 +1,6 @@
+*
+!Dockerfile
+!profiles.json
+!model-manifest-*.json
+!download_model.py
+!start-model.sh
