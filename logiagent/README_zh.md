@@ -16,6 +16,14 @@ bash tools/logiagent/prepare.sh
 
 ## 正常执行 RESTGym
 
+多个 LOGIAGENT/API 组合共享模型时，可在启动时设置模型请求并发数，例如：
+
+```bash
+OLLAMA_NUM_PARALLEL=2 bash tools/logiagent/prepare.sh
+```
+
+默认值为2。每路请求仍使用32768上下文，提高并发会增加显存需求，需在正式实验硬件上验证。已有模型容器若使用不同并发数，请结束正在运行的实验，执行停止脚本，再重新准备；模型镜像保留，无需重建。
+
 准备成功后，在平台选择接口、工具和预算，自行依次执行：
 
 ```bash

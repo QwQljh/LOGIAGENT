@@ -7,8 +7,18 @@ description: LLM-guided REST API request sequence generation, response-derived r
 # license: not specified for the tool; the model license is provided separately.
 repository: https://github.com/QwQljh/LOGIAGENT
 homepage: https://github.com/QwQljh/LOGIAGENT
-# authors: author metadata is supplied in the competition submission.
-# citation: no DOI has been assigned.
+authors:
+  - name: Hongru Li
+    affiliation: Xidian University
+  - name: Jiahao Luan
+    affiliation: Xidian University
+  - name: Ke Zhang
+    affiliation: Xidian University
+  - name: Chong Wang
+    affiliation: Nanyang Technological University
+  - name: Chenxi Zhang
+    affiliation: Xidian University
+# citation: no DOI has been provided.
 compatibility:
   openapi_versions: ["2.0", "3.0"]
   spec_formats: [json, yaml]

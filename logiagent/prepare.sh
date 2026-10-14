@@ -4,6 +4,9 @@ TOOL_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROFILE=production
 if [ "${1:-}" = --test ]; then PROFILE=test; shift; fi
 if [ "$#" -ne 0 ]; then echo "Usage: $0 [--test]" >&2; exit 2; fi
+PARALLEL="${OLLAMA_NUM_PARALLEL:-2}"
+[[ "$PARALLEL" =~ ^[1-9][0-9]*$ ]] || { echo 'OLLAMA_NUM_PARALLEL must be a positive integer (for example 1 or 2).' >&2; exit 2; }
+echo "Model request concurrency: $PARALLEL. Higher values require more GPU memory."
 command -v docker >/dev/null || { echo 'Docker is required.' >&2; exit 1; }
 docker info >/dev/null || { echo 'Start the Docker engine first.' >&2; exit 1; }
 IMAGE="logiagent-llm:ollama-${PROFILE}-1.0.2"
@@ -40,9 +43,15 @@ if docker container inspect "$CONTAINER" >/dev/null 2>&1; then
   if [ "$OWNER" != llm ] || [ "$CURRENT_IMAGE" != "$WANTED_IMAGE" ]; then
     echo 'Conflicting logiagent-llm container. Stop your previous owned model before switching.' >&2; exit 1
   fi
+  CURRENT_PARALLEL="$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$CONTAINER" | sed -n 's/^OLLAMA_NUM_PARALLEL=//p')"
+  CURRENT_PARALLEL="${CURRENT_PARALLEL:-1}"
+  if [ "$CURRENT_PARALLEL" != "$PARALLEL" ]; then
+    echo "Existing model container uses concurrency $CURRENT_PARALLEL; requested $PARALLEL. Finish active experiments, run tools/logiagent/deployment/stop-model.sh, then prepare again. The model image is retained." >&2
+    exit 1
+  fi
   if [ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER")" != true ]; then docker start "$CONTAINER" >/dev/null; fi
 else
-  docker run -d --name "$CONTAINER" --gpus all --label org.logiagent.component=llm --label "org.logiagent.profile=$PROFILE" -p 127.0.0.1:11434:11434 "$IMAGE" >/dev/null
+  docker run -d --name "$CONTAINER" --gpus all -e "OLLAMA_NUM_PARALLEL=$PARALLEL" --label org.logiagent.component=llm --label "org.logiagent.profile=$PROFILE" -p 127.0.0.1:11434:11434 "$IMAGE" >/dev/null
 fi
 echo '[4/4] Waiting for model loading; checking generation, thinking control, GPU and context.'
 if ! docker run --rm --network host -e "LOGIAGENT_READY_TIMEOUT=${LOGIAGENT_READY_TIMEOUT:-1800}" -v "$TOOL_DIR/deployment:/checks:ro" -v "$TOOL_DIR/model-config.json:/model-config.json:ro" "$PROBE_IMAGE" python -u /checks/check_model.py; then

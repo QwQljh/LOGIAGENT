@@ -9,6 +9,6 @@ LABEL org.logiagent.component="llm" org.logiagent.backend="ollama" org.logiagent
 COPY --from=weights /models /models
 COPY start-model.sh /opt/logiagent/start-model.sh
 RUN chmod +x /opt/logiagent/start-model.sh
-ENV OLLAMA_MODELS=/models OLLAMA_HOST=0.0.0.0:11434 OLLAMA_KEEP_ALIVE=-1 OLLAMA_NUM_PARALLEL=1 OLLAMA_MAX_LOADED_MODELS=1 OLLAMA_CONTEXT_LENGTH=32768 OLLAMA_NO_CLOUD=1
+ENV OLLAMA_MODELS=/models OLLAMA_HOST=0.0.0.0:11434 OLLAMA_KEEP_ALIVE=-1 OLLAMA_MAX_LOADED_MODELS=1 OLLAMA_CONTEXT_LENGTH=32768 OLLAMA_NO_CLOUD=1
 EXPOSE 11434
 ENTRYPOINT ["/opt/logiagent/start-model.sh"]

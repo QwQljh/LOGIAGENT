@@ -3,14 +3,12 @@
     "model": "qwen3:14b",
     "manifest_file": "model-manifest-production.json",
     "manifest_sha256": "bdbd181c33f2ed1b31c972991882db3cf4d192569092138a7d29e973cd9debe8",
-    "num_ctx": 32768,
-    "num_parallel": 1
+    "num_ctx": 32768
   },
   "test": {
     "model": "qwen3:0.6b",
     "manifest_file": "model-manifest-test.json",
     "manifest_sha256": "7df6b6e09427a769808717c0a93cadc4ae99ed4eb8bf5ca557c90846becea435",
-    "num_ctx": 32768,
-    "num_parallel": 1
+    "num_ctx": 32768
   }
 }

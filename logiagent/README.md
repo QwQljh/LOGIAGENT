@@ -16,6 +16,14 @@ Production requests one NVIDIA GPU with at least 24 GB VRAM, compatible drivers 
 
 ## Run RESTGym normally
 
+If multiple LOGIAGENT/API combinations share the model, configure request concurrency at startup, for example:
+
+```bash
+OLLAMA_NUM_PARALLEL=2 bash tools/logiagent/prepare.sh
+```
+
+The default is 2. Higher concurrency increases GPU memory use with the 32768 context per request; validate the chosen value on the experiment hardware. If a model container already exists with a different concurrency setting, finish active experiments, stop it with the cleanup script, then prepare again. The model image is retained and does not need rebuilding.
+
 After preparation succeeds, select the APIs, tools and budget in RESTGym, then run these commands yourself:
 
 ```bash
